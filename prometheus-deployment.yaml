@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deployment
+  namespace: monitoring
+  labels:
+    app: prometheus-ci-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-ci-server
+  template:
+    metadata:
+      labels:
+        app: prometheus-ci-server
+    spec:
+      containers:
+        - name: prometheus-ci
+          image: prom/prometheus
+          args:
+            - "--config.file=/etc/prometheus/prometheus.yml"
+            - "--storage.tsdb.path=/prometheus/"
+          ports:
+            - containerPort: 9090
+          volumeMounts:
+            - name: prometheus-ci-config-volume
+              mountPath: /etc/prometheus/
+            - name: prometheus-ci-storage-volume
+              mountPath: /prometheus/
+      volumes:
+        - name: prometheus-ci-config-volume
+          configMap:
+            defaultMode: 420
+            name: prometheus-ci-server-conf
+
+        - name: prometheus-ci-storage-volume
+          emptyDir: {}
